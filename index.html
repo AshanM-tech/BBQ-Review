@@ -5,21 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live BBQ Arena Board</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght=600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
         :root {
-            --bg-dark: #08070a;
-            --arena-orange: #ff4500;
-            --arena-gold: #ffaa00;
-            --text-muted: #94a3b8;
+            --bg-dark: #0f111a;
+            --arena-orange: #ff5722;
+            --neon-glow: rgba(255, 87, 34, 0.4);
+            --text-muted: #64748b;
             
-            /* Enhanced Warm Palette for Sticky Notes */
-            --sticky-yellow-top: #fffbeb;
-            --sticky-yellow-bot: #fef08a;
-            --sticky-orange-top: #fff7ed;
-            --sticky-orange-bot: #ffedd5;
-            
-            --note-text: #1e293b;
+            /* High Contrast Modern Card Colors */
+            --card-team-bg: #1e2230;
+            --card-event-bg: #251c22;
+            --text-light: #f8fafc;
         }
 
         * { box-sizing: border-box; }
@@ -27,13 +24,12 @@
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-dark);
-            /* Rich ambient fireglow background */
+            /* Grid line aesthetics with vibrant ambient background spots */
             background-image: 
-                radial-gradient(circle at 50% -10%, rgba(255, 69, 0, 0.25) 0%, rgba(255, 140, 0, 0.08) 30%, transparent 60%),
-                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 80%),
-                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-            background-size: auto, auto, 30px 30px, 30px 30px;
+                radial-gradient(circle at 50% 0%, rgba(255, 87, 34, 0.25) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: auto, 40px 40px, 40px 40px;
             margin: 0;
             padding: 0;
             height: 100vh;
@@ -45,15 +41,18 @@
 
         header {
             text-align: center;
-            padding: 30px 0 15px 0;
+            padding: 35px 0 20px 0;
             position: relative;
             z-index: 20;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             flex-shrink: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 17, 26, 0.8);
+            backdrop-filter: blur(8px);
         }
 
         .logo-container {
@@ -66,17 +65,11 @@
         }
 
         .logo-img {
-            height: 110px;
+            height: 105px;
             width: auto;
             object-fit: contain;
             display: block;
-            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.95)) 
-                    drop-shadow(0 0 40px rgba(255, 69, 0, 0.4));
-            transition: transform 0.3s ease;
-        }
-        
-        header:hover .logo-img {
-            transform: scale(1.03);
+            filter: drop-shadow(0 0 30px rgba(255, 87, 34, 0.5));
         }
 
         .logo-fallback {
@@ -85,20 +78,16 @@
             text-transform: uppercase;
             color: #ffffff;
             letter-spacing: 3px;
-            text-shadow: 0 0 30px rgba(255,69,0,0.8);
-            white-space: nowrap;
+            text-shadow: 0 0 30px var(--arena-orange);
         }
 
         .subtitle {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            letter-spacing: 6px;
+            color: #ff9800;
+            font-size: 0.8rem;
+            letter-spacing: 7px;
             text-transform: uppercase;
             font-weight: 800;
-            background: linear-gradient(90deg, #94a3b8, #e2e8f0, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            opacity: 0.9;
+            text-shadow: 0 2px 10px rgba(255, 152, 0, 0.3);
         }
 
         #board-viewport {
@@ -106,117 +95,105 @@
             width: 100%;
             overflow-y: auto;
             z-index: 1;
-            scroll-behavior: smooth;
         }
         
         #dashboard-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 32px;
-            padding: 20px 50px 60px 50px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 25px;
+            padding: 30px 40px 60px 40px;
         }
 
-        /* Modernized Sticky Note Card */
+        /* High-End Cyber-Cyberpunk Sticky Alternative Layout */
         .thumb {
             position: relative;
-            background: linear-gradient(135deg, var(--sticky-yellow-top) 0%, var(--sticky-yellow-bot) 100%);
-            /* Complex shadow for a 3D peeling-off-the-page look */
-            box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.2),
-                0 2px 4px -1px rgba(0, 0, 0, 0.1),
-                0 20px 25px -5px rgba(0, 0, 0, 0.4);
-            border-bottom-right-radius: 40px 10px;
-            padding: 24px 20px 16px 20px;
-            color: var(--note-text);
-            transform: rotate(var(--tilt, -1deg)) translateY(0);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-            min-height: 150px;
+            background: var(--card-team-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 24px;
+            color: var(--text-light);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 160px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        /* Tactile Sticky Tape Effect at Top */
-        .thumb::after {
+        /* Neon side indicator tag instead of top tape */
+        .thumb::before {
             content: '';
             position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-1deg);
-            width: 65px;
-            height: 18px;
-            background-color: rgba(255, 255, 255, 0.28);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-left: 1px dashed rgba(255,255,255,0.3);
-            border-right: 1px dashed rgba(255,255,255,0.3);
+            top: 24px;
+            left: 0;
+            width: 4px;
+            height: 35px;
+            background: #00e5ff;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px #00e5ff;
         }
 
         .thumb.sticky-event {
-            background: linear-gradient(135deg, var(--sticky-orange-top) 0%, var(--sticky-orange-bot) 100%);
-            border-bottom-right-radius: 12px 40px; /* Varied warp corner shapes */
+            background: var(--card-event-bg);
+        }
+        
+        .thumb.sticky-event::before {
+            background: #ff0055;
+            box-shadow: 0 0 10px #ff0055;
         }
 
-        /* Subtle Hover expansion over cards */
         .thumb:hover {
-            transform: scale(1.04) rotate(0deg) translateY(-4px) !important;
-            box-shadow: 0 25px 30px -10px rgba(0, 0, 0, 0.6);
-            z-index: 5;
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.05);
         }
 
         /* Active Spotlight item glowing outline */
         .thumb.spotlighting {
-            outline: 3px solid #ffffff;
-            box-shadow: 0 0 0 6px rgba(255,255,255,0.15), 0 0 40px var(--arena-orange);
-            transform: scale(1.06) rotate(0deg) !important;
-            z-index: 10;
+            border-color: var(--arena-orange);
+            box-shadow: 0 0 30px var(--neon-glow);
+            transform: scale(1.03);
         }
 
         .thumb .label-team {
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: #0f172a;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #f1f5f9;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px dashed rgba(15, 23, 42, 0.1);
-            padding-bottom: 6px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding-left: 8px;
         }
 
         .thumb .stars { 
-            color: #d97706; 
-            font-size: 0.85rem; 
-            font-weight: 800; 
-            letter-spacing: 1px;
+            color: #ffca28; 
+            font-size: 0.9rem;
+            text-shadow: 0 0 8px rgba(255, 202, 40, 0.6);
         }
         
         .thumb .card-content {
-            font-family: 'Caveat', cursive;
-            font-size: 1.45rem;
-            line-height: 1.15;
-            font-weight: 700;
-            color: #1e293b;
+            font-family: 'Plus Jakarta Sans', sans-serif; /* Cleaner modern font switch */
+            font-size: 1.05rem;
+            line-height: 1.5;
+            font-weight: 500;
+            color: #cbd5e1;
             flex-grow: 1;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 10px;
         }
 
         .thumb .short-name {
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: #64748b;
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(15, 23, 42, 0.06);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
         .loading {
@@ -224,19 +201,12 @@
             text-align: center;
             font-size: 1.1rem;
             color: var(--text-muted);
-            letter-spacing: 2px;
             padding: 100px 20px;
             font-weight: 600;
-            text-transform: uppercase;
-            animation: pulse 2s infinite ease-in-out;
+            letter-spacing: 1px;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
-        /* ---------- Modernized Backdrop Overlay Display Panel ---------- */
+        /* ---------- Spotlight Overlay Glassmorphism ---------- */
         #spotlight-overlay {
             position: fixed;
             inset: 0;
@@ -244,13 +214,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: backdrop-filter;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            background-color: rgba(6, 5, 8, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            background-color: rgba(10, 11, 15, 0.9);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.4s ease;
         }
         
         #spotlight-overlay.show {
@@ -260,85 +229,77 @@
         
         #spotlight-card {
             position: relative;
-            width: min(560px, 90vw);
-            padding: 50px 45px 35px 45px;
-            border-radius: 6px 6px 90px 6px;
-            background: linear-gradient(135deg, #ffffff 0%, var(--sticky-yellow-bot) 100%);
-            box-shadow: 
-                0 30px 60px -15px rgba(0,0,0,0.8),
-                0 50px 100px -20px rgba(255,69,0,0.2);
-            color: var(--note-text);
-            transform: scale(0.85) rotate(-3deg);
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        #spotlight-card::after {
-            content: '';
-            position: absolute;
-            top: -16px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-1deg);
-            width: 120px;
-            height: 32px;
-            background-color: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border-left: 1px dashed rgba(0,0,0,0.08);
-            border-right: 1px dashed rgba(0,0,0,0.08);
+            width: min(600px, 90vw);
+            padding: 45px;
+            border-radius: 16px;
+            background: #1e2230;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+            color: var(--text-light);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         #spotlight-overlay.show #spotlight-card {
-            transform: scale(1) rotate(-1deg);
+            transform: scale(1);
         }
         
         #spotlight-card.sticky-event {
-            background: linear-gradient(135deg, #ffffff 0%, var(--sticky-orange-bot) 100%);
-            border-radius: 6px 6px 6px 90px;
+            background: #251c22;
+        }
+
+        #spotlight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 45px;
+            width: 60px;
+            height: 4px;
+            background: #00e5ff;
+            box-shadow: 0 0 15px #00e5ff;
+        }
+        
+        #spotlight-card.sticky-event::before {
+            background: #ff0055;
+            box-shadow: 0 0 15px #ff0055;
         }
         
         #spotlight-card .label-team {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
-            color: #0f172a;
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
-            border-bottom: 2px dashed rgba(15, 23, 42, 0.1);
-            padding-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
         }
         
         #spotlight-card .stars {
-            color: #d97706;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            font-weight: 900;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            color: #ffca28;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(255, 202, 40, 0.5);
         }
         
         #spotlight-card .card-content {
-            font-family: 'Caveat', cursive;
-            font-size: 2.6rem;
-            line-height: 1.2;
-            font-weight: 700;
-            color: #0f172a;
+            font-size: 1.8rem;
+            line-height: 1.4;
+            font-weight: 600;
+            color: #f1f5f9;
         }
         
         #spotlight-card .card-content.long-text {
-            font-size: 2.0rem;
-            line-height: 1.25;
+            font-size: 1.4rem;
         }
         
         #spotlight-card .short-name {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #475569;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
             margin-top: 35px;
-            padding-top: 16px;
-            border-top: 2px dashed rgba(15, 23, 42, 0.1);
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
         }
@@ -355,7 +316,7 @@
 
     <div id="board-viewport">
         <div id="dashboard-container">
-            <div class="loading" id="loading-msg">Igniting the pits and hanging notes...</div>
+            <div class="loading" id="loading-msg">Connecting to live pit stream...</div>
         </div>
     </div>
 
@@ -385,7 +346,7 @@
         function parseCSV(text) {
             return text.split('\n')
                 .filter(r => r.trim().length > 0)
-                .map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+                .map(row => row.split(/,(?=(?:?:[^"]*"){2})*[^"]*$)/)
                     .map(cell => cell.replace(/^"|"$/g, '').trim().replace(/""/g, '"')));
         }
 
@@ -484,9 +445,6 @@
                 inner += `<div class="short-name">${note.footerLabel}</div>`;
                 thumbEl.innerHTML = inner;
 
-                // Organic physics feeling tilts
-                const tilt = ((i * 43) % 9 - 4) * 0.8;
-                thumbEl.style.setProperty('--tilt', tilt + 'deg');
                 container.appendChild(thumbEl);
             });
         }
