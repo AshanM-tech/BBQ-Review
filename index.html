@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live BBQ Arena Board</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght=600;700&family=Plus+Jakarta+Sans:wght=400;600;700;800&display=swap');
+        
+        :root {
+            --bg-dark: #0a090b;
+            --arena-orange: #ff4500;
+            --arena-gold: #ffaa00;
+            --text-muted: #a1a1aa;
+            --sticky-yellow: #fef08a;
+            --sticky-orange: #fed7aa;
+            --sticky-yellow-shadow: rgba(254, 240, 138, 0.3);
+            --sticky-orange-shadow: rgba(253, 186, 116, 0.3);
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 20%, rgba(255, 69, 0, 0.18) 0%, rgba(255, 170, 0, 0.04) 35%, transparent 70%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: auto, auto, 20px 20px, 20px 20px;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+header {
+            text-align: center;
+            padding: 35px 0 10px 0;
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .logo-container {
+            position: relative;
+            display: flex;
+            flex-direction: column; /* Organizes elements cleanly down a single vertical column */
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .logo-img {
+            height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            margin-bottom: 4px; /* Creates spacing buffer directly below your logo image asset */
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.9)) 
+                    drop-shadow(0 0 35px rgba(255, 69, 0, 0.65));
+        }
+
+        .logo-fallback {
+            position: relative; /* Removes absolute masking layer to stream safely under the image logo */
+            z-index: 1;
+            font-size: 2.3rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255,69,0,0.8);
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.8);
+        }
+
+        #board-viewport {
+            position: absolute;
+            top: 175px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        
+        #dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+            padding: 15px 40px 50px 40px;
+        }
+
+        .thumb {
+            position: relative;
+            background: linear-gradient(135deg, #ffffff 0%, var(--sticky-yellow) 100%);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.65), 0 4px 10px rgba(0, 0, 0, 0.4);
+            border-bottom-right-radius: 28px 6px;
+            padding: 22px 16px 14px 16px;
+            color: #0f172a;
+            transform: rotate(var(--tilt, -1deg));
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
+            min-height: 120px;
+        }
+
+        .thumb::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 55px;
+            height: 14px;
+            background-color: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 1px dashed rgba(255,255,255,0.1);
+            border-right: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .thumb.sticky-event {
+            background: linear-gradient(135deg, #ffffff 0%, var(--sticky-orange) 100%);
+        }
+
+        .thumb.spotlighting {
+            outline: 3px solid #ffffff;
+            box-shadow: 0 0 0 6px rgba(255,255,255,0.2), 0 0 35px rgba(255, 110, 0, 0.8);
+            transform: scale(1.05) rotate(0deg) !important;
+            z-index: 10;
+        }
+
+        .thumb .label-team {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #020617;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .thumb .stars { color: #cc6a00; font-size: 0.8rem; font-weight: 700; }
+        
+        .thumb .card-content {
+            font-family: 'Caveat', cursive;
+            font-size: 1.25rem;
+            line-height: 1.2;
+            font-weight: 700;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .thumb .short-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #334155;
+            margin-top: 10px;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(15, 23, 42, 0.15);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            padding: 80px 20px;
+            font-weight: 600;
+        }
+
+        /* ---------- Spotlight Display Panel ---------- */
+        #spotlight-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.96) 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        
+        #spotlight-overlay.show {
+            pointer-events: auto;
+            opacity: 1;
+        }
+        
+        #spotlight-card {
+            position: relative;
+            width: min(580px, 85vw);
+            padding: 48px 40px 32px 40px;
+            border-radius: 4px 4px 80px 4px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--sticky-yellow) 100%);
+            box-shadow: 0 40px 90px rgba(0,0,0,0.95), 0 20px 40px rgba(0,0,0,0.6);
+            color: #0f172a;
+            transform: scale(0.8) rotate(-2deg);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #spotlight-card::after {
+            content: '';
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-1deg);
+            width: 100px;
+            height: 28px;
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            border-left: 1px dashed rgba(0,0,0,0.04);
+            border-right: 1px dashed rgba(0,0,0,0.04);
+        }
+        
+        #spotlight-overlay.show #spotlight-card {
+            transform: scale(1) rotate(-1.5deg);
+        }
+        
+        #spotlight-card.sticky-event {
+            background: linear-gradient(135deg, #ffffff 0%, var(--sticky-orange) 100%);
+        }
+        
+        #spotlight-card .label-team {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #020617;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        
+        #spotlight-card .stars {
+            color: #d97706;
+            font-size: 1.45rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+        
+        #spotlight-card .card-content {
+            font-family: 'Caveat', cursive;
+            font-size: 2.25rem;
+            line-height: 1.3;
+            font-weight: 700;
+        }
+        
+        #spotlight-card .card-content.long-text {
+            font-size: 1.75rem;
+            line-height: 1.35;
+        }
+        
+        #spotlight-card .short-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #334155;
+            margin-top: 26px;
+            padding-top: 14px;
+            border-top: 2px dashed rgba(15, 23, 42, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <div class="logo-fallback">Grill Masters</div>
+            <img class="logo-img" src="imagebbq.png" alt="Grill Masters Logo" onerror="console.error('Image rendering exception path: imagebbq.png')">
+        </div>
+        <div class="subtitle">Live Pitmaster Updates</div>
+    </header>
+
+    <div id="board-viewport">
+        <div id="dashboard-container">
+            <div class="loading" id="loading-msg">Hanging your sticky notes...</div>
+        </div>
+    </div>
+
+    <div id="spotlight-overlay">
+        <div id="spotlight-card"></div>
+    </div>
+
+    <script>
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSUPsZRf8sahc6_gXU_wLd2YXhY2kMZZFGJppOemR1anJui7_jZjzfrjeOGvE1-WyKPgRDX_p4I-mRE/pub?gid=1245279387&single=true&output=csv';
+        const refreshInterval = 15000;
+        
+        // Exact 5-second rotation stage sequence configuration
+        const stateDuration = 5000; 
+
+        let currentDataSignature = '';
+        let notesData = [];
+        let spotlightIndex = -1;
+        let isPopupActive = false; // Tracks if popup is active vs showing just the background grid
+        let alternateCycleTimer = null;
+
+        function formatTimestamp(raw) {
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return raw;
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function parseCSV(text) {
+            return text.split('\n')
+                .filter(r => r.trim().length > 0)
+                .map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+                    .map(cell => cell.replace(/^"|"$/g, '').trim().replace(/""/g, '"')));
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>'"]/g,
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        async function fetchDashboardData() {
+            try {
+                const separator = csvUrl.includes('?') ? '&' : '?';
+                const response = await fetch(csvUrl + separator + 't=' + new Date().getTime());
+                if (!response.ok) throw new Error('Network failure');
+                const data = await response.text();
+
+                if (data === currentDataSignature) return;
+                currentDataSignature = data;
+
+                const rows = parseCSV(data);
+                if (rows.length < 1) return;
+
+                const header = rows[0].map(h => h.toLowerCase().trim());
+                const idx = {
+                    timestamp: header.indexOf('timestamp'),
+                    shortName: header.indexOf('short name'),
+                    reviewEvent: header.indexOf('review event'),
+                    type: header.indexOf('type'),
+                    reviewFood: header.indexOf('review food'),
+                    teamName: header.indexOf('team name'),
+                    review: header.indexOf('review')
+                };
+
+                const parsed = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.every(cell => !cell)) continue;
+
+                    const responseType = (row[idx.type] || '').toLowerCase().trim();
+                    const shortName = row[idx.shortName] || 'Anon';
+                    const timeLabel = formatTimestamp(row[idx.timestamp]);
+                    let reviewText = '';
+                    let teamName = '';
+                    let starDisplay = '';
+
+                    if (responseType === 'team') {
+                        const starCount = parseInt(row[idx.reviewFood], 10) || 0;
+                        starDisplay = '★'.repeat(Math.min(Math.max(starCount, 0), 5)) || 'No Rating';
+                        teamName = row[idx.teamName] || 'Team';
+                        reviewText = row[idx.review] || '';
+                        if (!reviewText && !teamName) continue;
+                    } else if (responseType === 'event') {
+                        reviewText = row[idx.reviewEvent] || '';
+                        if (!reviewText) continue;
+                    } else {
+                        continue;
+                    }
+
+                    parsed.push({
+                        type: responseType,
+                        shortName, timeLabel, reviewText, teamName, starDisplay,
+                        footerLabel: timeLabel ? `${shortName} : ${timeLabel}` : shortName
+                    });
+                }
+
+                notesData = parsed;
+                renderThumbnailWall();
+
+                // Initialize state loop if it hasn't started yet
+                if (alternateCycleTimer === null && notesData.length > 0) {
+                    runStateCycle();
+                }
+            } catch (error) {
+                console.error('Error syncing dynamic matrix:', error);
+            }
+        }
+
+        function renderThumbnailWall() {
+            const container = document.getElementById('dashboard-container');
+            container.innerHTML = '';
+
+            if (notesData.length === 0) {
+                container.innerHTML = `<div class="loading" id="loading-msg">Waiting for submissions... Bring on the smoke!</div>`;
+                return;
+            }
+
+            notesData.forEach((note, i) => {
+                const thumbEl = document.createElement('div');
+                thumbEl.className = 'thumb ' + (note.type === 'team' ? 'sticky-team' : 'sticky-event');
+                thumbEl.dataset.noteIndex = i;
+
+                let inner = '';
+                if (note.type === 'team') {
+                    inner += `<div class="label-team">${escapeHTML(note.teamName)} : <span class="stars">${note.starDisplay}</span></div>`;
+                }
+                inner += `<div class="card-content">${escapeHTML(note.reviewText)}</div>`;
+                inner += `<div class="short-name">${escapeHTML(note.footerLabel)}</div>`;
+                thumbEl.innerHTML = inner;
+
+                const tilt = ((i * 37) % 7 - 3) * 0.7;
+                thumbEl.style.setProperty('--tilt', tilt + 'deg');
+                container.appendChild(thumbEl);
+            });
+        }
+
+        // Logic loop coordinator to toggle views cleanly every 5000ms
+        function runStateCycle() {
+            if (notesData.length === 0) {
+                alternateCycleTimer = setTimeout(runStateCycle, stateDuration);
+                return;
+            }
+
+            const overlay = document.getElementById('spotlight-overlay');
+
+            if (!isPopupActive) {
+                // STAGE 1: Pop up a note for 5 seconds
+                isPopupActive = true;
+                
+                // Move index pointer forward
+                spotlightIndex = (spotlightIndex + 1) % notesData.length;
+                const note = notesData[spotlightIndex];
+
+                const card = document.getElementById('spotlight-card');
+                card.className = note.type === 'team' ? 'sticky-team' : 'sticky-event';
+
+                let inner = '';
+                if (note.type === 'team') {
+                    inner += `<div class="label-team">${escapeHTML(note.teamName)} : <span class="stars">${note.starDisplay}</span></div>`;
+                }
+                inner += `<div class="card-content${note.reviewText.length > 160 ? ' long-text' : ''}">${escapeHTML(note.reviewText)}</div>`;
+                inner += `<div class="short-name">${escapeHTML(note.footerLabel)}</div>`;
+                card.innerHTML = inner;
+
+                overlay.classList.add('show');
+
+                // Highlight the thumb note on grid wall behind the scene
+                document.querySelectorAll('.thumb.spotlighting').forEach(el => el.classList.remove('spotlighting'));
+                const matchingThumb = document.querySelector(`.thumb[data-note-index="${spotlightIndex}"]`);
+                if (matchingThumb) matchingThumb.classList.add('spotlighting');
+
+            } else {
+                // STAGE 2: Hide popup and display all grid cards for 5 seconds
+                isPopupActive = false;
+                overlay.classList.remove('show');
+                document.querySelectorAll('.thumb.spotlighting').forEach(el => el.classList.remove('spotlighting'));
+            }
+
+            alternateCycleTimer = setTimeout(runStateCycle, stateDuration);
+        }
+
+        fetchDashboardData();
+        setInterval(fetchDashboardData, refreshInterval);
+    </script>
+</body>
+</html>
