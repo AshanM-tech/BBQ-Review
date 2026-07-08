@@ -15,7 +15,7 @@
             
             /* High Contrast Modern Card Colors */
             --card-team-bg: #1e2230;
-            --card-event-bg: #251c22;
+            --card-event-bg: #2d1b24; /* Deeper, rich wine tone for event metrics */
             --text-light: #f8fafc;
         }
 
@@ -98,44 +98,55 @@
         
         #dashboard-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 25px;
             padding: 30px 40px 60px 40px;
         }
 
+        /* Base Sticky Card Formatting */
         .thumb {
             position: relative;
-            background: var(--card-team-bg);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             padding: 24px;
             color: var(--text-light);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 160px;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        .thumb::before {
+        /* --- STICKY TEAM OVERRIDES --- */
+        .thumb.sticky-team {
+            background: var(--card-team-bg);
+        }
+        .thumb.sticky-team::before {
             content: '';
             position: absolute;
             top: 24px;
             left: 0;
             width: 4px;
             height: 35px;
-            background: #00e5ff;
+            background: #00e5ff; /* Cyan accent bar */
             border-radius: 0 4px 4px 0;
             box-shadow: 0 0 10px #00e5ff;
         }
 
+        /* --- STICKY EVENT OVERRIDES --- */
         .thumb.sticky-event {
             background: var(--card-event-bg);
         }
-        
         .thumb.sticky-event::before {
-            background: #ff0055;
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: 0;
+            width: 4px;
+            height: 35px;
+            background: #ff0055; /* Neon pink accent bar */
+            border-radius: 0 4px 4px 0;
             box-shadow: 0 0 10px #ff0055;
         }
 
@@ -145,6 +156,7 @@
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.05);
         }
 
+        /* Active Spotlight item glowing outline */
         .thumb.spotlighting {
             border-color: var(--arena-orange);
             box-shadow: 0 0 30px var(--neon-glow);
@@ -152,13 +164,13 @@
         }
 
         .thumb .label-team {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 700;
-            color: #f1f5f9;
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             padding-left: 8px;
         }
 
@@ -169,9 +181,8 @@
         }
         
         .thumb .card-content {
-            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 1.05rem;
-            line-height: 1.5;
+            line-height: 1.6;
             font-weight: 500;
             color: #cbd5e1;
             flex-grow: 1;
@@ -179,7 +190,8 @@
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            padding-left: 8px;
         }
 
         .thumb .short-name {
@@ -202,6 +214,7 @@
             letter-spacing: 1px;
         }
 
+        /* ---------- Spotlight Overlay Glassmorphism ---------- */
         #spotlight-overlay {
             position: fixed;
             inset: 0;
@@ -227,20 +240,23 @@
             width: min(600px, 90vw);
             padding: 45px;
             border-radius: 16px;
-            background: #1e2230;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
             color: var(--text-light);
             transform: scale(0.9);
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
+        #spotlight-card.sticky-team {
+            background: var(--card-team-bg);
+        }
+
+        #spotlight-card.sticky-event {
+            background: var(--card-event-bg);
+        }
         
         #spotlight-overlay.show #spotlight-card {
             transform: scale(1);
-        }
-        
-        #spotlight-card.sticky-event {
-            background: #251c22;
         }
 
         #spotlight-card::before {
@@ -338,7 +354,6 @@
             return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
 
-        // Completely safe CSV parser loop that handles quotes perfectly without regex
         function parseCSV(text) {
             let lines = text.split('\n');
             return lines.filter(line => line.trim().length > 0).map(line => {
@@ -479,7 +494,7 @@
                 const note = notesData[spotlightIndex];
 
                 const card = document.getElementById('spotlight-card');
-                card.className = note.type === 'team' ? 'sticky-team' : 'sticky-event';
+                card.className = 'sticky-card ' + (note.type === 'team' ? 'sticky-team' : 'sticky-event');
 
                 let inner = '';
                 if (note.type === 'team') {
