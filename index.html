@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live BBQ Arena Board</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght=600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght=600;700&family=Plus+Jakarta+Sans:wght=400;500;600;700;800&display=swap');
         
         :root {
             --bg-dark: #0f111a;
@@ -24,7 +24,6 @@
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-dark);
-            /* Grid line aesthetics with vibrant ambient background spots */
             background-image: 
                 radial-gradient(circle at 50% 0%, rgba(255, 87, 34, 0.25) 0%, transparent 50%),
                 linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
@@ -104,7 +103,6 @@
             padding: 30px 40px 60px 40px;
         }
 
-        /* High-End Cyber-Cyberpunk Sticky Alternative Layout */
         .thumb {
             position: relative;
             background: var(--card-team-bg);
@@ -120,7 +118,6 @@
             justify-content: space-between;
         }
 
-        /* Neon side indicator tag instead of top tape */
         .thumb::before {
             content: '';
             position: absolute;
@@ -148,7 +145,6 @@
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.05);
         }
 
-        /* Active Spotlight item glowing outline */
         .thumb.spotlighting {
             border-color: var(--arena-orange);
             box-shadow: 0 0 30px var(--neon-glow);
@@ -173,7 +169,7 @@
         }
         
         .thumb .card-content {
-            font-family: 'Plus Jakarta Sans', sans-serif; /* Cleaner modern font switch */
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 1.05rem;
             line-height: 1.5;
             font-weight: 500;
@@ -206,7 +202,6 @@
             letter-spacing: 1px;
         }
 
-        /* ---------- Spotlight Overlay Glassmorphism ---------- */
         #spotlight-overlay {
             position: fixed;
             inset: 0;
@@ -343,11 +338,27 @@
             return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
 
+        // Completely safe CSV parser loop that handles quotes perfectly without regex
         function parseCSV(text) {
-            return text.split('\n')
-                .filter(r => r.trim().length > 0)
-                .map(row => row.split(/,(?=(?:?:[^"]*"){2})*[^"]*$)/)
-                    .map(cell => cell.replace(/^"|"$/g, '').trim().replace(/""/g, '"')));
+            let lines = text.split('\n');
+            return lines.filter(line => line.trim().length > 0).map(line => {
+                let result = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    let char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+                return result;
+            });
         }
 
         function escapeHTML(str) {
@@ -360,14 +371,19 @@
             try {
                 const separator = csvUrl.includes('?') ? '&' : '?';
                 const response = await fetch(csvUrl + separator + 't=' + new Date().getTime());
-                if (!response.ok) throw new Error('Network failure');
+                if (!response.ok) throw new Error('Google Sheet status: ' + response.status);
                 const data = await response.text();
+
+                if (!data || data.trim().length === 0) throw new Error('Empty CSV data data.');
 
                 if (data === currentDataSignature) return;
                 currentDataSignature = data;
 
                 const rows = parseCSV(data);
-                if (rows.length < 1) return;
+                if (rows.length <= 1) {
+                    document.getElementById('loading-msg').innerText = "No entries in data pool.";
+                    return;
+                }
 
                 const header = rows[0].map(h => h.toLowerCase().trim());
                 const idx = {
@@ -397,10 +413,8 @@
                         starDisplay = '★'.repeat(Math.min(Math.max(starCount, 0), 5)) || 'No Rating';
                         teamName = row[idx.teamName] || 'Team';
                         reviewText = row[idx.review] || '';
-                        if (!reviewText && !teamName) continue;
                     } else if (responseType === 'event') {
                         reviewText = row[idx.reviewEvent] || '';
-                        if (!reviewText) continue;
                     } else {
                         continue;
                     }
@@ -419,7 +433,8 @@
                     runStateCycle();
                 }
             } catch (error) {
-                console.error('Error syncing dynamic matrix:', error);
+                console.error('Data Sync Error:', error);
+                document.getElementById('loading-msg').innerHTML = `<span style="color: #ff0055;">Connection Error:</span><br><small style="font-size:0.85rem; text-transform:none; display:block; margin-top:10px;">${error.message}</small>`;
             }
         }
 
@@ -428,7 +443,7 @@
             container.innerHTML = '';
 
             if (notesData.length === 0) {
-                container.innerHTML = `<div class="loading" id="loading-msg">Waiting for submissions... Bring on the smoke!</div>`;
+                container.innerHTML = `<div class="loading" id="loading-msg">No entries discovered.</div>`;
                 return;
             }
 
